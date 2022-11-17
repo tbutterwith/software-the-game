@@ -1,6 +1,7 @@
 import React from "react";
 
 type props = {
+  users: number;
   featuresCount: number;
   bugsCount: number;
   featureRate: string;
@@ -12,6 +13,7 @@ type props = {
 };
 
 const CompanyStats = ({
+  users,
   featuresCount,
   bugsCount,
   featureRate,
@@ -27,7 +29,7 @@ const CompanyStats = ({
     </div>
     <div className="panel-full-width">
       <div className="panel-half-width">
-        <div>Users: 0</div>
+        <div>Users: {users}</div>
         <br />
         <div>Features: {Math.floor(featuresCount)}</div>
         <div>Bugs: {Math.floor(bugsCount)}</div>

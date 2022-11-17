@@ -5,13 +5,17 @@ import CompanyStats from "./sections/CompanyStats";
 
 const cycleTimeMs = 333;
 const bugsPerFeatureRate = 0.45;
+const newUserRate = 0.5;
+const revenuePerUser = 0.5 / cycleTimeMs;
+
 const costPerDev = 50 / cycleTimeMs;
-const revenuePerFeature = 20 / cycleTimeMs;
 const featuresPerDev = 5 / cycleTimeMs;
-const baseDeveloperCost = 20;
+const baseDeveloperPrice = 20;
 
 function App() {
-  const [revenue, updateRevenue] = useState(0);
+  const [revenue, updateRevenue] = useState(100);
+
+  const [users, updateUsers] = useState(1);
 
   const [featureDevsCount, updateFeatureDevsCount] = useState(1);
   const [bugFixDevsCount, updateBugFixDevsCount] = useState(0);
@@ -43,6 +47,10 @@ function App() {
       }
     }
 
+    const newUsers =
+      users + Math.round(Math.random() * newUserRate * featuresCount);
+    updateUsers(newUsers);
+
     updateRoundedFeatureCount(updatedRoundedFeatures);
     updateFeaturesCount(updatedFeatures);
 
@@ -54,7 +62,7 @@ function App() {
 
   const calculateRevenuePerCycle = () => {
     return (
-      (roundedFeatureCount - roundedBugsCount) * revenuePerFeature -
+      (roundedFeatureCount - roundedBugsCount) * revenuePerUser * users -
       costPerDev * getDeveloperCount()
     );
   };
@@ -72,7 +80,7 @@ function App() {
   const getDeveloperCount = () => featureDevsCount + bugFixDevsCount;
 
   const getDeveloperCost = () =>
-    baseDeveloperCost * (1 + (getDeveloperCount() * 2) / 10);
+    baseDeveloperPrice * (1 + getDeveloperCount() ** 3);
 
   const canHireDeveloper = () => revenue >= getDeveloperCost();
 
@@ -101,6 +109,7 @@ function App() {
     <div className="App">
       <h1>Software - The Game!</h1>
       <CompanyStats
+        users={users}
         featuresCount={featuresCount}
         bugsCount={bugsCount}
         featureRate={calculateFeaturesRate()}
@@ -137,8 +146,8 @@ function App() {
       </div>
       <div className="panel-full-width">
         <div className="panel-half-width">
-          <div>Throughput: 0 ops/s</div>
-          <div>Throughput: 0 ops/s</div>
+          <div>Used Throughput: 0 ops/s</div>
+          <div>Available Throughput: 0 ops/s</div>
         </div>
         <div className="panel-half-width"></div>
       </div>
