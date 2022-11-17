@@ -4,23 +4,28 @@ import "./App.css";
 import CompanyStats from "./sections/CompanyStats";
 import Purchasable from "./Purchaseable";
 import DeveloperUpgrades from "./Upgrades/DeveloperUpgrades";
+import InfrastructureUpgrades from "./Upgrades/InfrastructureUpgrades";
+import { Upgradable } from "./Upgrades/Upgradable";
 
 const cycleTimeMs = 333;
 const bugsPerFeatureRate = 0.45;
 const newUserRate = 0.5;
-const revenuePerUser = 0.5 / cycleTimeMs;
+const revenuePerUser = 0.4 / cycleTimeMs;
 
 const costPerDev = 50 / cycleTimeMs;
-const featuresPerDev = 5 / cycleTimeMs;
+
 const baseDeveloperPrice = 20;
 
 function App() {
   const [revenue, updateRevenue] = useState(100);
 
   const [users, updateUsers] = useState(1);
+  const [featuresPerDev, updateFeaturesPerDev] = useState(5 / cycleTimeMs);
 
   const [featureDevsCount, updateFeatureDevsCount] = useState(1);
   const [bugFixDevsCount, updateBugFixDevsCount] = useState(0);
+
+  const [availableThroughput, updateAvailableThroughput] = useState(1000);
 
   const [roundedFeatureCount, updateRoundedFeatureCount] = useState(1);
   const [featuresCount, updateFeaturesCount] = useState(1);
@@ -29,6 +34,7 @@ function App() {
 
   const [upgrades, updateUpgrades] = useState({
     developerUpgrades: DeveloperUpgrades,
+    infxUpgrades: InfrastructureUpgrades,
   });
 
   useInterval(() => {
@@ -43,9 +49,12 @@ function App() {
     let updatedBugs = bugsCount - bugFixDevsCount * featuresPerDev;
 
     if (updatedRoundedFeatures > roundedFeatureCount) {
-      // is it a bug?
+      // is it a bug? If we have over 50 features, we're twice as likely to
+      // see bugs
+      let calcBugsPerFeatureRate = bugsPerFeatureRate;
+      if (featuresCount > 50) calcBugsPerFeatureRate *= 2;
       const bugChance = Math.random();
-      if (bugChance <= bugsPerFeatureRate) {
+      if (bugChance <= calcBugsPerFeatureRate) {
         updatedFeatures -= 1;
         updatedRoundedFeatures -= 1;
 
@@ -55,8 +64,7 @@ function App() {
 
     const newUsers =
       users + Math.round(Math.random() * newUserRate * featuresCount);
-    if (calculateThroughput() <= calculateAvailableThroughput())
-      updateUsers(newUsers);
+    if (calculateThroughput() <= availableThroughput) updateUsers(newUsers);
 
     updateRoundedFeatureCount(updatedRoundedFeatures);
     updateFeaturesCount(updatedFeatures);
@@ -79,7 +87,6 @@ function App() {
   };
 
   const calculateThroughput = () => users * 2;
-  const calculateAvailableThroughput = () => 1000;
 
   const calculateFeaturesRate = () => {
     const ratePerCycle = featureDevsCount * featuresPerDev;
@@ -90,7 +97,7 @@ function App() {
   const getDeveloperCount = () => featureDevsCount + bugFixDevsCount;
 
   const getDeveloperCost = () =>
-    baseDeveloperPrice * (1 + getDeveloperCount() ** 3);
+    baseDeveloperPrice * (1 + getDeveloperCount() ** 5);
 
   const canHireDeveloper = () => revenue >= getDeveloperCost();
 
@@ -115,12 +122,40 @@ function App() {
     updateBugFixDevsCount(bugFixDevsCount + 1);
   };
 
+  const purchaseDevTool = (title: string) => {
+    upgrades.developerUpgrades.forEach((upgrade) => {
+      if (upgrade.title == title) {
+        upgrade.purchased = true;
+        updateRevenue(revenue - upgrade.cost);
+        updateFeaturesPerDev(featuresPerDev * upgrade.multiplier);
+      }
+    });
+  };
+
+  const purchaseInfx = (title: string) => {
+    upgrades.infxUpgrades.forEach((upgrade) => {
+      if (upgrade.title == title) {
+        upgrade.purchased = true;
+        updateRevenue(revenue - upgrade.cost);
+        updateAvailableThroughput(availableThroughput * upgrade.multiplier);
+      }
+    });
+  };
+
   const getAvailableDevUpgrades = () => {
     const { developerUpgrades } = upgrades;
 
-    const availableUpgrades = developerUpgrades.filter(
-      (upgrade) => !upgrade.purchased
-    );
+    return renderUpgrades(developerUpgrades, purchaseDevTool);
+  };
+
+  const getAvailableInfxUpgrades = () => {
+    const { infxUpgrades } = upgrades;
+
+    return renderUpgrades(infxUpgrades, purchaseInfx);
+  };
+
+  const renderUpgrades = (upgrades: Upgradable[], purchaseFn: Function) => {
+    const availableUpgrades = upgrades.filter((upgrade) => !upgrade.purchased);
 
     return availableUpgrades
       .slice(0, 2)
@@ -130,7 +165,7 @@ function App() {
           desc={upgrade.desc}
           cost={upgrade.cost}
           isAffordable={revenue > upgrade.cost}
-          onClick={() => console.log("Purchased thing")}
+          onClick={() => purchaseFn(upgrade.title)}
         />
       ));
   };
@@ -170,16 +205,12 @@ function App() {
       </div>
       <hr />
       <div className="panel-full-width">
-        <h3>Infrastructure</h3>
-      </div>
-      <div className="panel-full-width">
         <div className="panel-half-width">
+          <h3>Infrastructure</h3>
           <div>Used Throughput: {calculateThroughput()} ops/s</div>
-          <div>
-            Available Throughput: {calculateAvailableThroughput()} ops/s
-          </div>
+          <div>Available Throughput: {availableThroughput} ops/s</div>
         </div>
-        <div className="panel-half-width"></div>
+        <div className="panel-half-width">{getAvailableInfxUpgrades()}</div>
       </div>
     </div>
   );
