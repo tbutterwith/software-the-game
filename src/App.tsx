@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import useInterval from "./util/useInterval";
 import "./App.css";
 import CompanyStats from "./sections/CompanyStats";
+import Purchasable from "./Purchaseable";
+import DeveloperUpgrades from "./Upgrades/DeveloperUpgrades";
 
 const cycleTimeMs = 333;
 const bugsPerFeatureRate = 0.45;
@@ -24,6 +26,10 @@ function App() {
   const [featuresCount, updateFeaturesCount] = useState(1);
   const [roundedBugsCount, updateRoundedBugsCount] = useState(0);
   const [bugsCount, updateBugsCount] = useState(0);
+
+  const [upgrades, updateUpgrades] = useState({
+    developerUpgrades: DeveloperUpgrades,
+  });
 
   useInterval(() => {
     // Calculate revenue
@@ -49,7 +55,8 @@ function App() {
 
     const newUsers =
       users + Math.round(Math.random() * newUserRate * featuresCount);
-    updateUsers(newUsers);
+    if (calculateThroughput() <= calculateAvailableThroughput())
+      updateUsers(newUsers);
 
     updateRoundedFeatureCount(updatedRoundedFeatures);
     updateFeaturesCount(updatedFeatures);
@@ -70,6 +77,9 @@ function App() {
   const calculateRevenueRate = () => {
     return (calculateRevenuePerCycle() * (1000 / cycleTimeMs)).toFixed(2);
   };
+
+  const calculateThroughput = () => users * 2;
+  const calculateAvailableThroughput = () => 1000;
 
   const calculateFeaturesRate = () => {
     const ratePerCycle = featureDevsCount * featuresPerDev;
@@ -105,6 +115,26 @@ function App() {
     updateBugFixDevsCount(bugFixDevsCount + 1);
   };
 
+  const getAvailableDevUpgrades = () => {
+    const { developerUpgrades } = upgrades;
+
+    const availableUpgrades = developerUpgrades.filter(
+      (upgrade) => !upgrade.purchased
+    );
+
+    return availableUpgrades
+      .slice(0, 2)
+      .map((upgrade) => (
+        <Purchasable
+          title={upgrade.title}
+          desc={upgrade.desc}
+          cost={upgrade.cost}
+          isAffordable={revenue > upgrade.cost}
+          onClick={() => console.log("Purchased thing")}
+        />
+      ));
+  };
+
   return (
     <div className="App">
       <h1>Software - The Game!</h1>
@@ -121,16 +151,13 @@ function App() {
       />
       <hr />
       <div className="panel-full-width">
-        <h3>Developers</h3>
-      </div>
-      <div className="panel-full-width">
         <div className="panel-half-width">
+          <h3>Developers</h3>
           <div>Developer Cost: £{getDeveloperCost()}</div>
           <button onClick={addDev} disabled={!canHireDeveloper()}>
             Hire developer
           </button>
-        </div>
-        <div className="panel-half-width">
+          <br />
           <button onClick={addFeatureDev} disabled={bugFixDevsCount <= 0}>
             Move dev to feature work
           </button>
@@ -139,6 +166,7 @@ function App() {
             Move dev to bug fixes
           </button>
         </div>
+        <div className="panel-half-width">{getAvailableDevUpgrades()}</div>
       </div>
       <hr />
       <div className="panel-full-width">
@@ -146,8 +174,10 @@ function App() {
       </div>
       <div className="panel-full-width">
         <div className="panel-half-width">
-          <div>Used Throughput: 0 ops/s</div>
-          <div>Available Throughput: 0 ops/s</div>
+          <div>Used Throughput: {calculateThroughput()} ops/s</div>
+          <div>
+            Available Throughput: {calculateAvailableThroughput()} ops/s
+          </div>
         </div>
         <div className="panel-half-width"></div>
       </div>

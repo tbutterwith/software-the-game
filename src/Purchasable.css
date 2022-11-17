@@ -1,0 +1,26 @@
+.purchasable h3 {
+  font-size: 1em;
+  margin: 0;
+  padding: 0;
+}
+
+.purchasable p {
+  font-size: 0.9em;
+  margin: 0;
+  padding: 0;
+}
+
+.purchasable-desc {
+  font-style: italic;
+}
+
+.purchasable {
+  border: 1px white solid;
+  width: 300px;
+  padding: 1em;
+  margin-bottom: 1em;
+}
+
+.purchasable.not-affordable {
+  color: grey;
+}
