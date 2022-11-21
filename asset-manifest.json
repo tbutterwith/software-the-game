@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/software-the-game/static/css/main.0c276fa0.css",
+    "main.js": "/software-the-game/static/js/main.47660387.js",
+    "static/js/787.7556daa7.chunk.js": "/software-the-game/static/js/787.7556daa7.chunk.js",
+    "index.html": "/software-the-game/index.html",
+    "main.0c276fa0.css.map": "/software-the-game/static/css/main.0c276fa0.css.map",
+    "main.47660387.js.map": "/software-the-game/static/js/main.47660387.js.map",
+    "787.7556daa7.chunk.js.map": "/software-the-game/static/js/787.7556daa7.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.0c276fa0.css",
+    "static/js/main.47660387.js"
+  ]
+}
